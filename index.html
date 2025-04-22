@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Anket</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 300px;
+      margin-bottom: 20px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    .yes { background-color: #4CAF50; color: white; }
+    .no { background-color: #f44336; color: white; }
+    #resultList {
+      width: 90%;
+      max-width: 400px;
+    }
+    li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2 id="ages">Kadın: ? - Erkek: ?</h2>
+    <button class="yes" onclick="submitChoice('y')">Uygun (Y)</button>
+    <button class="no" onclick="submitChoice('n')">Uygun Değil (N)</button>
+    <p id="status"></p>
+  </div>
+
+  <ul id="resultList"></ul>
+
+  <script>
+    const endpoint = "https://script.google.com/macros/s/AKfycbz5pqJdVA6J-JNVM7jJW45GWltcXHUO03vTib5SbjmJk813pVxfu-TXqZbFl1K8MXJ2JA/exec"; // 👈 Buraya kendi Apps Script Web App linkini yapıştır
+
+    let counter = 0;
+    const maxCount = 10;
+
+    function randomAge() {
+      return Math.floor(Math.random() * 91) + 1;
+    }
+
+    let W_age, M_age;
+    generateAges();
+
+    function generateAges() {
+      W_age = randomAge();
+      M_age = randomAge();
+      document.getElementById("ages").innerText = `Kadın: ${W_age} - Erkek: ${M_age}`;
+    }
+
+    function submitChoice(choice) {
+      if (counter >= maxCount) return;
+
+      // Google Sheets'e gönder
+      const params = new URLSearchParams();
+      params.append("w", W_age);
+      params.append("m", M_age);
+      params.append("c", choice);
+
+      fetch(endpoint, {
+        method: "POST",
+        body: params,
+      })
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("status").innerText = "Gönderildi ✅";
+        const listItem = document.createElement("li");
+        listItem.textContent = `W,${W_age},M,${M_age},C,${choice}`;
+        document.getElementById("resultList").appendChild(listItem);
+        counter++;
+        if (counter < maxCount) {
+          generateAges();
+        } else {
+          document.getElementById("ages").innerText = "Anket tamamlandı ✅";
+        }
+      })
+      .catch(err => {
+        document.getElementById("status").innerText = "Hata oluştu ❌";
+      });
+    }
+  </script>
+
+</body>
+</html>
